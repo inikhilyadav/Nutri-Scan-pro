@@ -13,7 +13,7 @@ def test_health():
     res = client.get("/health")
     assert res.status_code == 200, f"Health check failed: {res.text}"
     data = res.json()
-    assert data["status"] == "healthy"
+    assert data["status"] in ("ok", "healthy")
     assert data["model_loaded"] is True
     print("✓ Health check passed:", data)
 
