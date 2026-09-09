@@ -1,0 +1,17 @@
+.git
+.github
+.gitignore
+.env
+.env.*
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+venv/
+.venv/
+env/
+frontend/
+node_modules/
+.local_store.json
+tests/
+*.log

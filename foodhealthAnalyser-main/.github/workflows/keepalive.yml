@@ -1,0 +1,45 @@
+name: keep-alive
+
+# Keeps two things from going to sleep on their free tiers:
+#  1. The Streamlit Community Cloud app (sleeps after 12h with no
+#     traffic, and needs a real browser click to wake — see
+#     scripts/wake_streamlit.py for why a plain ping doesn't work).
+#  2. The Supabase free project (pauses after a period of inactivity —
+#     a simple authenticated REST read is enough to count as activity).
+#
+# Required repo secrets (Settings -> Secrets and variables -> Actions):
+#   STREAMLIT_APP_URL   e.g. https://your-app.streamlit.app
+#   SUPABASE_URL        only needed once you've set up Supabase (SETUP.md)
+#   SUPABASE_KEY        the anon/public key, not the service_role key
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"  # every 6 hours
+  workflow_dispatch: {}
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Playwright
+        run: |
+          pip install playwright
+          playwright install --with-deps chromium
+
+      - name: Wake the Streamlit app
+        env:
+          STREAMLIT_APP_URL: ${{ secrets.STREAMLIT_APP_URL }}
+        run: python scripts/wake_streamlit.py
+
+      - name: Keep Supabase project active
+        if: ${{ secrets.SUPABASE_URL != '' }}
+        run: |
+          curl -sSL -o /dev/null -w "Supabase ping: %{http_code}\n" \
+            -H "apikey: ${{ secrets.SUPABASE_KEY }}" \
+            "${{ secrets.SUPABASE_URL }}/rest/v1/scan_stats?select=total" || true
