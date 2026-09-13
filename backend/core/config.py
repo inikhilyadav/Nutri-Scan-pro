@@ -25,7 +25,7 @@ class Settings(BaseModel):
     SUPABASE_KEY: str = os.environ.get("SUPABASE_KEY", "")
     
     # Port configuration (for cloud platforms like Render)
-    PORT: int = int(os.environ.get("PORT", 8001))
+    PORT: int = int(os.environ.get("PORT", 8000))
 
     def get_cors_origins(self) -> List[str]:
         origins = list(self.CORS_ORIGINS)

@@ -1,5 +1,8 @@
 import sys
 from pathlib import Path
+if sys.platform == "win32":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 sys.path.insert(0, str(Path(__file__).parent))
 
 from fastapi.testclient import TestClient
@@ -15,7 +18,7 @@ def test_health():
     data = res.json()
     assert data["status"] in ("ok", "healthy")
     assert data["model_loaded"] is True
-    print("✓ Health check passed:", data)
+    print("[PASS] Health check passed:", data)
 
 def test_stats():
     res = client.get("/api/stats")
@@ -23,7 +26,7 @@ def test_stats():
     data = res.json()
     assert "scan_count" in data
     assert "storage_mode" in data
-    print("✓ Stats endpoint passed:", data)
+    print("[PASS] Stats endpoint passed:", data)
 
 def test_validate_barcode():
     # Valid barcode with correct check digit (Nutella: 3017620422003)
@@ -37,7 +40,7 @@ def test_validate_barcode():
     res2 = client.get("/api/validate-barcode?barcode=012345678905")
     assert res2.status_code == 200
     assert len(res2.json()["normalized"]) == 13
-    print("✓ Barcode validation passed")
+    print("[PASS] Barcode validation passed")
 
 def test_analyze_nutella():
     res = client.get("/api/analyze/3017620422003")
@@ -47,7 +50,7 @@ def test_analyze_nutella():
     assert "score" in data
     assert data["score"] is not None
     assert "nutrients" in data
-    print("✓ Nutella analysis passed: Score", data["score"], data["recommendation"])
+    print("[PASS] Nutella analysis passed: Score", data["score"], data["recommendation"])
 
 def test_contribute_flow():
     test_barcode = "0000000000001"
@@ -66,7 +69,7 @@ def test_contribute_flow():
     assert data["name"] == "Organic Oat Flakes"
     assert data["source"] == "Community-added"
     assert data["score"] >= 80
-    print("✓ Contribution flow passed: Score", data["score"], data["source"])
+    print("[PASS] Contribution flow passed: Score", data["score"], data["source"])
 
 def test_scan_image_validation():
     # Create a small blank image in memory
@@ -84,7 +87,7 @@ def test_scan_image_validation():
     # Blank image should report success=False, no barcode detected
     assert data["success"] is False
     assert "No barcode detected" in data["message"]
-    print("✓ Scan image validation passed:", data["message"])
+    print("[PASS] Scan image validation passed:", data["message"])
 
 if __name__ == "__main__":
     test_health()
