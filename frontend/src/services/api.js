@@ -1,15 +1,45 @@
-import { API_ENDPOINTS } from '../config/api';
+import { API_BASE_URL, API_ENDPOINTS } from '../config/api';
+
+/**
+ * Enhanced fetch wrapper with custom timeout and friendly error diagnostics.
+ */
+async function fetchWithTimeout(url, options = {}, timeoutMs = 10000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const res = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+    return res;
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      throw new Error(
+        `Connection timed out after ${timeoutMs / 1000}s. The backend (${API_BASE_URL}) is taking too long to respond. It may be sleeping or suspended on Render.`
+      );
+    }
+    if (err.message === 'Failed to fetch' || err.name === 'TypeError') {
+      throw new Error(
+        `Failed to fetch from backend API (${API_BASE_URL}). The server appears to be suspended or offline. Please check that the Render service is active.`
+      );
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 /**
  * Fetch health status from FastAPI backend
  */
 export async function getHealthStatus() {
   try {
-    const res = await fetch(API_ENDPOINTS.HEALTH);
+    const res = await fetchWithTimeout(API_ENDPOINTS.HEALTH, {}, 5000);
     if (!res.ok) throw new Error(`Health check failed (${res.status})`);
     return await res.json();
   } catch (err) {
-    console.error('API health check error:', err);
+    console.warn('API health check error:', err.message);
     return { status: 'offline', error: err.message };
   }
 }
@@ -19,11 +49,11 @@ export async function getHealthStatus() {
  */
 export async function getStats() {
   try {
-    const res = await fetch(API_ENDPOINTS.STATS);
+    const res = await fetchWithTimeout(API_ENDPOINTS.STATS, {}, 5000);
     if (!res.ok) throw new Error(`Failed to load stats (${res.status})`);
     return await res.json();
   } catch (err) {
-    console.warn('Could not fetch stats:', err);
+    console.warn('Could not fetch stats:', err.message);
     return null;
   }
 }
@@ -34,11 +64,11 @@ export async function getStats() {
 export async function validateBarcode(barcode) {
   if (!barcode) return { barcode: '', normalized: '', is_valid_checksum: null };
   try {
-    const res = await fetch(API_ENDPOINTS.VALIDATE_BARCODE(barcode));
+    const res = await fetchWithTimeout(API_ENDPOINTS.VALIDATE_BARCODE(barcode), {}, 5000);
     if (!res.ok) throw new Error(`Barcode validation error (${res.status})`);
     return await res.json();
   } catch (err) {
-    console.warn('Validation error:', err);
+    console.warn('Validation error:', err.message);
     return { barcode, normalized: barcode.replace(/\D/g, ''), is_valid_checksum: null };
   }
 }
@@ -50,7 +80,7 @@ export async function analyzeProduct(barcode) {
   const cleanCode = barcode.trim();
   if (!cleanCode) throw new Error('Please provide a barcode to analyze.');
 
-  const res = await fetch(API_ENDPOINTS.ANALYZE(cleanCode));
+  const res = await fetchWithTimeout(API_ENDPOINTS.ANALYZE(cleanCode), {}, 10000);
   if (!res.ok) {
     const errData = await res.json().catch(() => ({}));
     throw new Error(errData.detail || `Server error during analysis (${res.status})`);
@@ -65,10 +95,10 @@ export async function scanImage(file) {
   const formData = new FormData();
   formData.append('file', file);
 
-  const res = await fetch(API_ENDPOINTS.SCAN_IMAGE, {
+  const res = await fetchWithTimeout(API_ENDPOINTS.SCAN_IMAGE, {
     method: 'POST',
     body: formData,
-  });
+  }, 15000);
 
   if (!res.ok) {
     const errData = await res.json().catch(() => ({}));
@@ -81,13 +111,13 @@ export async function scanImage(file) {
  * Submit missing product information to community cache
  */
 export async function contributeProduct(data) {
-  const res = await fetch(API_ENDPOINTS.CONTRIBUTE, {
+  const res = await fetchWithTimeout(API_ENDPOINTS.CONTRIBUTE, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(data),
-  });
+  }, 10000);
 
   if (!res.ok) {
     const errData = await res.json().catch(() => ({}));

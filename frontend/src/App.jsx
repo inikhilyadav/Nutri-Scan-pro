@@ -145,9 +145,40 @@ export default function App() {
           )}
 
           {error && (
-            <div className="alert alert-danger" style={{ marginTop: '20px' }}>
-              <AlertCircle size={18} style={{ flexShrink: 0 }} />
-              <div>{error}</div>
+            <div
+              className="alert alert-danger"
+              style={{
+                marginTop: '20px',
+                display: 'flex',
+                alignItems: 'flex-start',
+                justifyContent: 'space-between',
+                gap: '12px',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                <AlertCircle size={20} style={{ flexShrink: 0, marginTop: '2px' }} />
+                <div>
+                  <div style={{ fontWeight: 600, marginBottom: '2px' }}>Connection Notice</div>
+                  <div style={{ wordBreak: 'break-word', fontSize: '0.9rem', lineHeight: '1.4' }}>
+                    {error}
+                  </div>
+                </div>
+              </div>
+              {currentCode && (
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  style={{
+                    padding: '6px 14px',
+                    fontSize: '0.82rem',
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0,
+                  }}
+                  onClick={() => handleAnalyze(currentCode)}
+                >
+                  Retry
+                </button>
+              )}
             </div>
           )}
         </section>
