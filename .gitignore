@@ -41,9 +41,11 @@ yarn-error.log*
 .env.*
 !.env.example
 !**/.env.example
+!frontend/.env.production
 *.local_store.json
 **/.local_store.json
 node_modules/
+.netlify/
 
 # IDE
 .vscode/

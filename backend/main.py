@@ -22,12 +22,12 @@ app = FastAPI(
 )
 
 # CORS Configuration
-# Authorizes Cloudflare Pages (*.pages.dev), Cloudflare Workers (*.workers.dev), and local Vite frontend
+# Authorizes Netlify (*.netlify.app), Cloudflare Pages (*.pages.dev), and local Vite frontend
 cors_origins = settings.get_cors_origins()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins if cors_origins != ["*"] else ["*"],
-    allow_origin_regex=r"^https://.*(\.pages\.dev|\.workers\.dev)$",
+    allow_origin_regex=r"^https://.*(\.netlify\.app|\.pages\.dev|\.workers\.dev)$",
     allow_credentials=True if cors_origins != ["*"] else False,
     allow_methods=["*"],
     allow_headers=["*"],
