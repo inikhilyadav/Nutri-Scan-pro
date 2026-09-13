@@ -3,7 +3,6 @@ import { HeartPulse } from 'lucide-react';
 
 export default function Header({ apiHealth }) {
   const isOnline = apiHealth?.status === 'ok' || apiHealth?.status === 'healthy';
-  const isChecked = apiHealth !== null;
 
   return (
     <header className="header">
@@ -20,16 +19,9 @@ export default function Header({ apiHealth }) {
       </div>
 
       <div className="header-meta">
-        <div
-          className="status-pill"
-          title={apiHealth?.error || (isOnline ? 'FastAPI Backend Healthy' : 'Backend offline or suspended')}
-        >
+        <div className="status-pill" title="NutriScan Engine Active">
           <span className={`status-indicator ${isOnline ? 'online' : 'offline'}`} />
-          {isOnline
-            ? 'FastAPI Backend Connected'
-            : isChecked
-            ? 'Backend Offline / Suspended'
-            : 'Connecting to API...'}
+          {isOnline ? 'NutriScan Engine Online' : 'Connecting...'}
         </div>
       </div>
     </header>
